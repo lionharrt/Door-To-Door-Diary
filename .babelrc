@@ -1,0 +1,37 @@
+{
+    presets: [
+        "env",
+        "react",
+        "stage-0"
+    ],
+    ignore: ["**/*.json"],
+    env: {
+        start: {
+            presets: [
+                "react-hmre"
+            ]
+        },
+        production: {
+            presets: [
+                ["minify", {
+                    "evaluate": false,
+                    "mangle": false
+                }]
+            ]
+        }
+    },
+    "plugins": [
+        ["module-resolver", {
+            "root": ["./app"],
+            "extensions": [".js", ".jsx"],
+            "alias": {
+                "components": "./app/components",
+                "containers": "./app/containers",
+                "config": "./app/config",
+                "modules": "./app/redux/modules",
+                "helpers": "./app/helpers"
+                }
+             }]
+            ]
+            
+}

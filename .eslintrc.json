@@ -1,0 +1,32 @@
+{
+	"env": {
+		"es6": true,
+		"node": true,
+		"browser": true
+	},
+	"extends": ["airbnb", "prettier", "prettier/react"],
+	"parserOptions": {
+		"ecmaFeatures": {
+			"experimentalObjectRestSpread": true,
+			"jsx": true
+		},
+		"sourceType": "module"
+	},
+	"plugins": ["react", "prettier"],
+	"rules": {
+		"indent": ["error", 2, { "SwitchCase": 1 }],
+		"linebreak-style": ["error", "unix"],
+		"quotes": ["error", "double"],
+		"semi": ["error", "never"],
+		"jsx-a11y/label-has-for": [
+			2,
+			{
+				"components": ["Label"],
+				"required": {
+					"every": ["nesting", "id"]
+				},
+				"allowChildren": true
+			}
+		]
+	}
+}

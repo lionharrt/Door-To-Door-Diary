@@ -1,0 +1,42 @@
+.input {
+  display: flex;
+  resize: none;
+  height: 20px;
+  width: 300px;
+  text-align: center;
+  overflow: hidden;
+  border-radius: 10px;
+  margin-bottom: 5px;
+}
+
+.centerDiv {
+  margin-top: 5%;
+  margin-left: 40%;
+}
+
+.containerDiv {
+  width: 100%;
+  height: 100vh;
+  margin-bottom: 0;
+}
+.submit {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+}
+.header {
+  padding-top: 300px;
+  text-align: center;
+  text-shadow: -2px -2px 2px #fff, 1px 1px 1px #000;
+  color: #33cc33;
+  opacity: 0.7;
+  font: 80px "Museo700";
+}
+html {
+  background: url(./forest.jpg) no-repeat center center fixed;
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
+}
