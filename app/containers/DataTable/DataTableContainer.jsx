@@ -1,7 +1,5 @@
 import React, { Component } from "react"
-import { DataTable } from "components"
-import PropTypes from "prop-types"
-import formatTableData from "helpers/utils.jsx"
+import { DataTable } from "../../components/DataTable"
 
 class DataTableContainer extends Component {
   constructor(props) {
@@ -11,8 +9,7 @@ class DataTableContainer extends Component {
     }
   }
   componentWillMount() {
-    this.setState({ data: "") })
-    console.log(this.props)
+    this.setState({ data: "" })
   }
   render() {
     return <DataTable data={this.state.data} />

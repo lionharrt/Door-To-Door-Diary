@@ -1,20 +1,20 @@
-var emptyFn = function () {}
-  , extend = require('lodash.assign')
-  , Mingo = require('mingo')
-  , es = require('event-stream')
+var emptyFn = function() {}
+var Mingo = require('mingo')
+var es = require('event-stream')
 
-module.exports = function (opts) {
-  var options = extend({ idProperty: '_id' }, opts)
-    , self = es.map(createOrUpdate)
-    , data = []
-    , idSeq = 0
+module.exports = function(opts) {
+  var options = Object.assign({ idProperty: '_id' }, opts)
+  var self = es.map(createOrUpdate)
+  var data = []
+  var idSeq = 0
 
-  Mingo.setup({ key: options.idProperty })
+  var mingoOpts = Object.freeze({ idKey: options.idProperty })
 
   function findById(id) {
     var query = {}
-    query[ options.idProperty ] = id
-    return Mingo.find(data, query).first()
+    query[options.idProperty] = id
+    const cursor = Mingo.find(data, query, {}, mingoOpts)
+    return cursor.hasNext() ? cursor.next() : null
   }
 
   /**
@@ -29,17 +29,21 @@ module.exports = function (opts) {
    */
   function checkForIdAndData(object, callback) {
     var id = object[options.idProperty]
-      , foundObject
+    var foundObject
     if (id === undefined || id === null) {
-      return callback(new Error('Object has no \''
-        + options.idProperty + '\' property'))
+      return callback(
+        new Error("Object has no '" + options.idProperty + "' property")
+      )
     }
 
     foundObject = findById(id)
 
     if (foundObject === null) {
-      return callback(new Error('No object found with \''
-        + options.idProperty + '\' = \'' + id + '\''))
+      return callback(
+        new Error(
+          "No object found with '" + options.idProperty + "' = '" + id + "'"
+        )
+      )
     }
 
     return callback(null, foundObject)
@@ -56,19 +60,24 @@ module.exports = function (opts) {
     self.emit('create', object)
     callback = callback || emptyFn
     // clone the object
-    var extendedObject = extend({}, object)
+    var extendedObject = Object.assign({}, object)
 
     if (!extendedObject[options.idProperty]) {
       idSeq += 1
       extendedObject[options.idProperty] = '' + idSeq
     } else {
       if (findById(extendedObject[options.idProperty]) !== null) {
-        return callback(new Error('Key ' + extendedObject[options.idProperty] + ' already exists'))
+        return callback(
+          new Error(
+            'Key ' + extendedObject[options.idProperty] + ' already exists'
+          )
+        )
       }
       // if an id is provided, cast to string.
-      extendedObject[options.idProperty] = '' + extendedObject[options.idProperty]
+      extendedObject[options.idProperty] =
+        '' + extendedObject[options.idProperty]
     }
-    data.push(extend({}, extendedObject))
+    data.push(Object.assign({}, extendedObject))
     self.emit('afterCreate', extendedObject)
     callback(undefined, extendedObject)
   }
@@ -89,7 +98,7 @@ module.exports = function (opts) {
       var query = {}
       query[options.idProperty] = object[options.idProperty]
 
-      self.findOne(query, function (err, foundObject) {
+      self.findOne(query, function(ignoreError, foundObject) {
         if (foundObject) {
           // We found the object so update
           self.update(object, callback)
@@ -114,9 +123,9 @@ module.exports = function (opts) {
     self.emit('read', id)
     callback = callback || emptyFn
     query[options.idProperty] = '' + id
-    findByQuery(query, {}, function (error, objects) {
+    findByQuery(query, {}, function(ignoreError, objects) {
       if (objects[0] !== undefined) {
-        var cloned = extend({}, objects[0])
+        var cloned = Object.assign({}, objects[0])
         self.emit('received', cloned)
         callback(undefined, cloned)
       } else {
@@ -127,10 +136,10 @@ module.exports = function (opts) {
 
   /**
    * Updates a single entity. Emits an 'update' event. Optionally overwrites
-   * the entire entity, by default just extends it with the new values.
+   * the entire entity, by default just Object.assigns it with the new values.
    *
    * @param {Object} object to update
-   * @param {Boolean} whether to overwrite or extend the existing entity
+   * @param {Boolean} whether to overwrite or Object.assign the existing entity
    * @param {Function} callback (optional)
    * @api public
    */
@@ -142,23 +151,23 @@ module.exports = function (opts) {
     self.emit('update', object, overwrite)
     callback = callback || emptyFn
     var id = '' + object[options.idProperty]
-      , updatedObject
+    var updatedObject
 
-    checkForIdAndData(object, function (error, foundObject) {
+    checkForIdAndData(object, function(error, foundObject) {
       if (error) {
         return callback(error)
       }
 
       if (overwrite) {
-        updatedObject = extend({}, object)
+        updatedObject = Object.assign({}, object)
       } else {
-        updatedObject = extend({}, foundObject, object)
+        updatedObject = Object.assign({}, foundObject, object)
       }
 
       var query = {}
-        , copy = extend({}, updatedObject)
-      query[ options.idProperty ] = id
-      data = Mingo.remove(data, query)
+      var copy = Object.assign({}, updatedObject)
+      query[options.idProperty] = id
+      data = Mingo.remove(data, query, mingoOpts)
       data.push(updatedObject)
       self.emit('afterUpdate', copy, overwrite)
       callback(undefined, copy)
@@ -177,7 +186,7 @@ module.exports = function (opts) {
   function deleteMany(query, callback) {
     callback = callback || emptyFn
     self.emit('deleteMany', query)
-    data = Mingo.remove(data, query)
+    data = Mingo.remove(data, query, mingoOpts)
     self.emit('afterDeleteMany', query)
     callback()
   }
@@ -191,7 +200,6 @@ module.exports = function (opts) {
    * @api public
    */
   function del(id, callback) {
-
     callback = callback || emptyFn
 
     if (typeof callback !== 'function') {
@@ -200,7 +208,7 @@ module.exports = function (opts) {
 
     self.emit('delete', id)
     var query = {}
-    query[ options.idProperty ] = id
+    query[options.idProperty] = id
     deleteMany(query, function() {
       self.emit('afterDelete', '' + id)
       callback(undefined)
@@ -222,34 +230,33 @@ module.exports = function (opts) {
    * @api private
    */
   function findByQuery(query, options, callback) {
-
     if (typeof options === 'function') {
       callback = options
       options = {}
     }
 
-    var cursor = Mingo.find(data, query, options && options.fields)
+    var cursor = Mingo.find(data, query, options && options.fields, mingoOpts)
     if (options && options.sort) cursor = cursor.sort(options.sort)
     if (options && options.limit) cursor = cursor.limit(options.limit)
 
     var allData = getObjectCopies(cursor.all())
 
     if (callback === undefined) {
-
-      return es.readArray(allData).pipe(es.map(function (data, cb) {
+      return es.readArray(allData).pipe(
+        es.map(function(data, cb) {
           self.emit('received', data)
           cb(null, data)
-        }))
+        })
+      )
     } else {
       callback(null, allData)
     }
-
   }
 
   function getObjectCopies(objects) {
     var copies = []
-    objects.forEach(function (object) {
-      copies.push(extend({}, object))
+    objects.forEach(function(object) {
+      copies.push(Object.assign({}, object))
     })
     return copies
   }
@@ -295,7 +302,7 @@ module.exports = function (opts) {
       options = {}
     }
     self.emit('findOne', query, options)
-    findByQuery(query, options, function (error, objects) {
+    findByQuery(query, options, function(ignoreError, objects) {
       self.emit('received', objects[0])
       callback(undefined, objects[0])
     })
@@ -310,25 +317,24 @@ module.exports = function (opts) {
    */
   function count(query, callback) {
     self.emit('count', query)
-    findByQuery(query, options, function (error, objects) {
+    findByQuery(query, options, function(ignoreError, objects) {
       self.emit('received', objects.length)
       callback(undefined, objects.length)
     })
   }
 
-  extend(self
-    , { create: create
-      , read: read
-      , update: update
-      , 'delete': del
-      , deleteMany: deleteMany
-      , find: find
-      , findOne: findOne
-      , count: count
-      , idProperty: options.idProperty
-      , createOrUpdate: createOrUpdate
-      })
+  Object.assign(self, {
+    create: create,
+    read: read,
+    update: update,
+    delete: del,
+    deleteMany: deleteMany,
+    find: find,
+    findOne: findOne,
+    count: count,
+    idProperty: options.idProperty,
+    createOrUpdate: createOrUpdate
+  })
 
   return self
-
 }
